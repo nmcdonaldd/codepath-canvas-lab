@@ -63,7 +63,6 @@ class CanvasViewController: UIViewController {
             self.trayOriginalCenter = facesTrayView.center
             break
         case .changed:
-            print("\(self.facesTrayView.frame.minY)")
             self.facesTrayView.center = CGPoint(x: trayOriginalCenter.x, y: trayOriginalCenter.y + ((self.facesTrayView.frame.minY < 450) ? translation.y/10 : translation.y))
             break
         case .ended:
