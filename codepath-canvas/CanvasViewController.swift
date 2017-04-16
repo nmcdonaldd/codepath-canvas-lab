@@ -63,7 +63,8 @@ class CanvasViewController: UIViewController {
             self.trayOriginalCenter = facesTrayView.center
             break
         case .changed:
-            self.facesTrayView.center = CGPoint(x: trayOriginalCenter.x, y: trayOriginalCenter.y + translation.y)
+            print("\(self.facesTrayView.frame.minY)")
+            self.facesTrayView.center = CGPoint(x: trayOriginalCenter.x, y: trayOriginalCenter.y + ((self.facesTrayView.frame.minY < 450) ? translation.y/10 : translation.y))
             break
         case .ended:
             let velocity = sender.velocity(in: view)
@@ -84,12 +85,20 @@ class CanvasViewController: UIViewController {
         }
     }
     
+    func userDoubleTappedFace(sender: UITapGestureRecognizer) {
+        let imageView = sender.view as! UIImageView
+        imageView.removeFromSuperview()
+    }
+    
     @IBAction func didPanFace(_ sender: UIPanGestureRecognizer) {
         switch sender.state {
         case .began:
             let imageViewTapped = sender.view! as! UIImageView
             self.newlyCreatedFace = UIImageView(image: imageViewTapped.image)
             self.newlyCreatedFace.isUserInteractionEnabled = true
+            let doubleTapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(userDoubleTappedFace(sender:)))
+            doubleTapGestureRecognizer.numberOfTapsRequired = 2
+            self.newlyCreatedFace.addGestureRecognizer(doubleTapGestureRecognizer)
             self.newlyCreatedFace.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(canvasFaceDidPan(sender:))))
             view.addSubview(self.newlyCreatedFace)
             self.newlyCreatedFace.center = imageViewTapped.center
@@ -109,6 +118,6 @@ class CanvasViewController: UIViewController {
             }, completion: nil)
         default:
             print("Default case, this shouldn't be called.")
-        }   
+        }
     }
 }
