@@ -12,11 +12,20 @@ class CanvasViewController: UIViewController {
 
     @IBOutlet weak var facesTrayView: UIView!
     var trayOriginalCenter: CGPoint!
+    var newlyCreatedFaceOriginalCenter: CGPoint!
+    var newlyCreatedFace: UIImageView!
+    
+    var trayDownOffset: CGFloat!
+    var trayUp: CGPoint!
+    var trayDown: CGPoint!
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
+        trayDownOffset = 190
+        trayUp = facesTrayView.center
+        trayDown = CGPoint(x: facesTrayView.center.x ,y: facesTrayView.center.y + trayDownOffset)
     }
 
     override func didReceiveMemoryWarning() {
@@ -24,31 +33,82 @@ class CanvasViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    func canvasFaceDidPan(sender: UIPanGestureRecognizer) {
+        switch sender.state {
+        case .began:
+            self.newlyCreatedFace = sender.view as! UIImageView
+            self.newlyCreatedFaceOriginalCenter = newlyCreatedFace.center
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 1, options: [], animations: {
+                self.newlyCreatedFace.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+            }, completion: nil)
+            break
+        case .changed:
+            let translation = sender.translation(in: view)
+            self.newlyCreatedFace.center = CGPoint(x: newlyCreatedFaceOriginalCenter.x + translation.x, y: newlyCreatedFaceOriginalCenter.y + translation.y)
+            break
+        case .ended:
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 1, options: [], animations: {
+                self.newlyCreatedFace.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+            }, completion: nil)
+            break
+        default:
+            print("This shouldn't be called!")
+        }
+    }
 
     @IBAction func didPanTray(_ sender: UIPanGestureRecognizer) {
         let translation = sender.translation(in: view)
         switch sender.state {
         case .began:
-            print("Panning began!")
             self.trayOriginalCenter = facesTrayView.center
             break
         case .changed:
-            print("Panning changed!")
             self.facesTrayView.center = CGPoint(x: trayOriginalCenter.x, y: trayOriginalCenter.y + translation.y)
+            break
+        case .ended:
+            let velocity = sender.velocity(in: view)
+            if velocity.y > 0 {
+                // This means the tray is moving down.
+                UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1, options: [], animations: {
+                    self.facesTrayView.center = self.trayDown
+                }, completion: nil)
+            } else {
+                // The tray is moving up.
+                UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 1, options: [], animations: {
+                    self.facesTrayView.center = self.trayUp
+                }, completion: nil)
+            }
             break
         default:
             print("\(sender.state.rawValue)")
         }
-        
     }
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    
+    @IBAction func didPanFace(_ sender: UIPanGestureRecognizer) {
+        switch sender.state {
+        case .began:
+            let imageViewTapped = sender.view! as! UIImageView
+            self.newlyCreatedFace = UIImageView(image: imageViewTapped.image)
+            self.newlyCreatedFace.isUserInteractionEnabled = true
+            self.newlyCreatedFace.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(canvasFaceDidPan(sender:))))
+            view.addSubview(self.newlyCreatedFace)
+            self.newlyCreatedFace.center = imageViewTapped.center
+            self.newlyCreatedFace.center.y += facesTrayView.frame.origin.y
+            newlyCreatedFaceOriginalCenter = newlyCreatedFace.center
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 1, options: [], animations: {
+                self.newlyCreatedFace.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+            }, completion: nil)
+            break
+        case .changed:
+            let translation = sender.translation(in: view)
+            self.newlyCreatedFace.center = CGPoint(x: newlyCreatedFaceOriginalCenter.x + translation.x, y: newlyCreatedFaceOriginalCenter.y + translation.y)
+            break
+        case.ended:
+            UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 1, options: [], animations: {
+                self.newlyCreatedFace.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
+            }, completion: nil)
+        default:
+            print("Default case, this shouldn't be called.")
+        }   
     }
-    */
-
 }
